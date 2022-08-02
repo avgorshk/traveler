@@ -2,11 +2,12 @@
 #define MAPOBJECT_H
 
 #include <QDomElement>
-#include <QPoint>
+#include <QPolygon>
+#include <QSize>
 #include <QVector>
 
 struct MapArea {
-    QVector<QVector<QPointF>> area;
+    QVector<QPolygonF> area;
     QString name;
     QDomElement *element = nullptr;
     bool visited = false;
@@ -19,6 +20,14 @@ public:
 
     void addArea(const MapArea& area) {
         m_area_list.push_back(area);
+    }
+
+    QSize getSize() const {
+        return QSize(m_width, m_height);
+    }
+
+    const QVector<MapArea>& getAreaList() const {
+        return m_area_list;
     }
 
 private:

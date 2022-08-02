@@ -4,22 +4,35 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QDir>
+#include <QMouseEvent>
 
 const char* RUSSIA_FILE_NAME = "data/russia-base.svg";
 
 MapView::MapView(QWidget *parent)
         : QGraphicsView{parent}, m_map(nullptr) {
+    auto scene = new QGraphicsScene(this);
+    setScene(scene);
+    setTransformationAnchor(AnchorUnderMouse);
+    setDragMode(ScrollHandDrag);
+    setViewportUpdateMode(FullViewportUpdate);
+
     auto execPath = QCoreApplication::applicationDirPath();
     auto filePath = QDir::cleanPath(execPath + QDir::separator() + RUSSIA_FILE_NAME);
     if (QFileInfo::exists(filePath)) {
         load(filePath);
     }
+
+    updateScene();
 }
 
 MapView::~MapView() {
     if (m_map != nullptr) {
         delete m_map;
     }
+}
+
+qreal MapView::zoomFactor() const {
+    return transform().m11();
 }
 
 static float getValue(const QString& path, uint& start) {
@@ -96,21 +109,23 @@ static QPointF getPoint(const QString& path, uint& start) {
     return QPointF(x, y);
 }
 
-static QVector<QPointF> getPolygon(const QString& path, QPointF& base) {
+static QPolygonF getPolygon(const QString& path, QPointF& base) {
     Q_ASSERT(!path.isEmpty());
     Q_ASSERT(path[0] == 'm');
 
-    QVector<QPointF> polygon;
+    QPolygonF polygon;
 
     uint id = 1;
     QPointF start_point = base;
     start_point += getPoint(path, id);
+    polygon.push_back(start_point);
+
     while (path[id].isSpace() || path[id] == '-') {
         Q_ASSERT(id < path.size());
         QPointF point = getPoint(path, id);
-        start_point += point;
+        QPointF prev = polygon.back();
+        polygon.push_back(prev + point);
     }
-    polygon.push_back(start_point);
 
     while (id < path.size()) {
         switch (path[id].unicode()) {
@@ -156,7 +171,7 @@ static QVector<QPointF> getPolygon(const QString& path, QPointF& base) {
         }
     }
 
-    base = polygon.back();
+    base = start_point;
     return polygon;
 }
 
@@ -219,4 +234,37 @@ void MapView::load(const QString& filename) {
         }
         node = node.nextSibling();
     }
+}
+
+void MapView::updateScene() const {
+    QGraphicsScene *s = scene();
+    s->clear();
+
+    const QVector<MapArea>& area_list = m_map->getAreaList();
+    for (const MapArea& area : area_list) {
+        for (const QPolygonF& p : area.area) {
+            s->addPolygon(p, QPen(), QBrush(QColorConstants::Gray));
+        }
+    }
+}
+
+void MapView::zoomBy(qreal factor) {
+    const qreal currentZoom = zoomFactor();
+    if ((factor < 1 && currentZoom < 0.1) || (factor > 1 && currentZoom > 10)) {
+        return;
+    }
+    scale(factor, factor);
+}
+
+void MapView::paintEvent(QPaintEvent *event) {
+    QGraphicsView::paintEvent(event);
+}
+
+void MapView::wheelEvent(QWheelEvent *event) {
+    zoomBy(qPow(1.2, event->angleDelta().y() / 240.0));
+}
+
+void MapView::mousePressEvent(QMouseEvent *event) {
+    qDebug() << mapToScene(event->pos());
+    QGraphicsView::mousePressEvent(event);
 }
