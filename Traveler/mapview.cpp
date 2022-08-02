@@ -6,7 +6,8 @@
 #include <QDir>
 #include <QMouseEvent>
 
-const char* RUSSIA_FILE_NAME = "data/russia-base.svg";
+const char* RUSSIA_BASE_FILE_NAME = "data/russia-base.svg";
+const char* RUSSIA_FILE_NAME = "data/russia.svg";
 
 MapView::MapView(QWidget *parent)
         : QGraphicsView{parent}, m_map(nullptr) {
@@ -17,9 +18,13 @@ MapView::MapView(QWidget *parent)
     setViewportUpdateMode(FullViewportUpdate);
 
     auto execPath = QCoreApplication::applicationDirPath();
-    auto filePath = QDir::cleanPath(execPath + QDir::separator() + RUSSIA_FILE_NAME);
-    if (QFileInfo::exists(filePath)) {
+    m_filePath = QDir::cleanPath(execPath + QDir::separator() + RUSSIA_FILE_NAME);
+    if (QFileInfo::exists(m_filePath)) {
+        load(m_filePath);
+    } else {
+        auto filePath = QDir::cleanPath(execPath + QDir::separator() + RUSSIA_BASE_FILE_NAME);
         load(filePath);
+        store(m_filePath);
     }
 
     updateScene();
@@ -176,6 +181,8 @@ static QPolygonF getPolygon(const QString& path, QPointF& base) {
 }
 
 void MapView::load(const QString& filename) {
+    Q_ASSERT(!filename.isEmpty());
+
     QFile file(filename);
     bool ok = file.open(QFile::ReadOnly);
     Q_ASSERT(ok);
@@ -234,6 +241,18 @@ void MapView::load(const QString& filename) {
         }
         node = node.nextSibling();
     }
+}
+
+void MapView::store(const QString& filename) {
+    Q_ASSERT(!filename.isEmpty());
+
+    QFile file(filename);
+    bool ok = file.open(QFile::WriteOnly | QFile::Text);
+    Q_ASSERT(ok);
+
+    QTextStream stream(&file);
+    stream << m_doc.toString();
+    file.close();
 }
 
 void MapView::updateScene() const {

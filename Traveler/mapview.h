@@ -22,12 +22,14 @@ protected:
 
 private:
     void load(const QString& filename);
+    void store(const QString& filename);
     void updateScene() const;
     void zoomBy(qreal factor);
 
 private:
     QDomDocument m_doc;
     MapObject* m_map;
+    QString m_filePath;
 };
 
 #endif // MAPVIEW_H
