@@ -15,7 +15,6 @@ public:
 
 private:
     void load(const QString& filename);
-    QVector<QPoint> getPolygon(const QString& path) const;
 
 private:
     QDomDocument m_doc;

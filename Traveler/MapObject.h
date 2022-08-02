@@ -6,7 +6,7 @@
 #include <QVector>
 
 struct MapArea {
-    QVector<QVector<QPoint>> area;
+    QVector<QVector<QPointF>> area;
     QString name;
     QDomElement *element = nullptr;
     bool visited = false;
@@ -16,9 +16,14 @@ class MapObject {
 public:
     MapObject(quint32 width, quint32 height)
         : m_width(width), m_height(height) {}
+
+    void addArea(const MapArea& area) {
+        m_area_list.push_back(area);
+    }
+
 private:
-    quint32 m_width;
-    quint32 m_height;
+    uint m_width;
+    uint m_height;
     QVector<MapArea> m_area_list;
 };
 
