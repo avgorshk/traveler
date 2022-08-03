@@ -108,6 +108,9 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 
 void MainWindow::regionChecked(MapArea* area) {
     Q_ASSERT(area != nullptr);
+    if (m_currentRegion != nullptr) {
+        regionUnchecked();
+    }
     m_currentRegion = area;
 
     m_currentRegion->setChecked(true);

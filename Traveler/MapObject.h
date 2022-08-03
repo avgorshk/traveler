@@ -123,12 +123,15 @@ private:
 
     static QPolygonF getPolygon(const QString& path, QPointF& base) {
         Q_ASSERT(!path.isEmpty());
-        Q_ASSERT(path[0] == 'm');
+        Q_ASSERT(path[0] == 'm' || path[0] == 'M');
 
         QPolygonF polygon;
 
         uint id = 1;
-        QPointF start_point = base;
+        QPointF start_point(0.0f, 0.0f);
+        if (path[0] == 'm') {
+            start_point = base;
+        }
         start_point += getPoint(path, id);
         polygon.push_back(start_point);
 
@@ -218,6 +221,10 @@ private:
                     auto sub_name = sub_element.tagName();
                     if (sub_name == "path") {
                         MapArea area(sub_element);
+                        if (sub_element.hasAttribute("fill")) {
+                            area.setVisited(true);
+                        }
+
                         QPointF base(0.0f, 0.0f);
                         auto content = sub_element.attribute("d");
                         auto path_list = content.split('z');
