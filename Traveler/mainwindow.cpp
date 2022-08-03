@@ -144,6 +144,7 @@ void MainWindow::regionUnchecked() {
 void MainWindow::regionSaved() {
     Q_ASSERT(m_currentRegion != nullptr);
 
+    m_currentRegion->setName(m_name->text());
     m_currentRegion->setVisited(m_flag->isChecked());
 
     regionUnchecked();

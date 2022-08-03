@@ -8,8 +8,9 @@
 
 class MapArea {
 public:
-    MapArea(QDomElement element)
-        : m_element(element),
+    MapArea(QDomDocument doc, QDomElement element)
+        : m_doc(doc),
+          m_element(element),
           m_visited(false),
           m_checked(false) {}
 
@@ -25,12 +26,34 @@ public:
         return m_name;
     }
 
-    void setVisited(bool visited) {
+    void setName(const QString& name, bool domUpdate = true) {
+        m_name = name;
+        if (domUpdate) {
+            if (m_element.hasChildNodes()) {
+                QDomNode title_node = m_element.firstChild();
+                QDomElement title_element = title_node.toElement();
+
+                QDomElement new_title_element = m_doc.createElement("title");
+                QDomText title_text = m_doc.createTextNode(m_name);
+                new_title_element.appendChild(title_text);
+                m_element.replaceChild(new_title_element, title_element);
+            } else {
+                QDomElement title_element = m_doc.createElement("title");
+                QDomText title_text = m_doc.createTextNode(m_name);
+                title_element.appendChild(title_text);
+                m_element.appendChild(title_element);
+            }
+        }
+    }
+
+    void setVisited(bool visited, bool domUpdate = true) {
         m_visited = visited;
-        if (m_visited) {
-            m_element.setAttribute("fill", "#90ee90");
-        } else {
-            m_element.removeAttribute("fill");
+        if (domUpdate) {
+            if (m_visited) {
+                m_element.setAttribute("fill", "#90ee90");
+            } else {
+                m_element.removeAttribute("fill");
+            }
         }
     }
 
@@ -47,9 +70,11 @@ public:
     }
 
 private:
+    QDomElement m_element;
+    QDomDocument m_doc;
+
     QVector<QPolygonF> m_area;
     QString m_name;
-    QDomElement m_element;
     bool m_visited;
     bool m_checked;
 };

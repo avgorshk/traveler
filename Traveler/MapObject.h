@@ -220,9 +220,16 @@ private:
                     QDomElement sub_element = sub_node.toElement();
                     auto sub_name = sub_element.tagName();
                     if (sub_name == "path") {
-                        MapArea area(sub_element);
+                        MapArea area(m_doc, sub_element);
+
                         if (sub_element.hasAttribute("fill")) {
-                            area.setVisited(true);
+                            area.setVisited(true, false);
+                        }
+
+                        if (sub_element.hasChildNodes()) {
+                            QDomNode title_node = sub_node.firstChild();
+                            QDomElement title_element = title_node.toElement();
+                            area.setName(title_element.text(), false);
                         }
 
                         QPointF base(0.0f, 0.0f);
