@@ -14,6 +14,12 @@ public:
     ~MapView();
 
     qreal zoomFactor() const;
+    void updateScene() const;
+    void store() const;
+
+signals:
+    void regionChecked(MapArea* area);
+    void regionUnchecked();
 
 protected:
     void wheelEvent(QWheelEvent *event) override;
@@ -21,13 +27,9 @@ protected:
     void mousePressEvent(QMouseEvent *event) override;
 
 private:
-    void load(const QString& filename);
-    void store(const QString& filename);
-    void updateScene() const;
     void zoomBy(qreal factor);
 
 private:
-    QDomDocument m_doc;
     MapObject* m_map;
     QString m_filePath;
 };

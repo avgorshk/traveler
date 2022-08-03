@@ -19,5 +19,6 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
     mainwindow.h \
+    maparea.h \
     mapobject.h \
     mapview.h
