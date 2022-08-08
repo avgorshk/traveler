@@ -3,7 +3,6 @@
 #include <QGroupBox>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
-#include <QLabel>
 #include <QScreen>
 #include <QStyle>
 
@@ -16,7 +15,6 @@ MainWindow::MainWindow(QWidget *parent)
     regionNameLabel->setMinimumWidth(100);
     QLineEdit* regionNameEdit = new QLineEdit();
     Q_ASSERT(regionNameEdit != nullptr);
-    regionNameEdit->setEnabled(false);
 
     QHBoxLayout* regionNameLayout = new QHBoxLayout();
     Q_ASSERT(regionNameLayout != nullptr);
@@ -28,7 +26,6 @@ MainWindow::MainWindow(QWidget *parent)
     regionVisitedLabel->setMinimumWidth(100);
     QCheckBox* regionVisitedCheckBox = new QCheckBox();
     Q_ASSERT(regionVisitedCheckBox != nullptr);
-    regionVisitedCheckBox->setEnabled(false);
 
     QHBoxLayout* regionVisitedLayout = new QHBoxLayout();
     Q_ASSERT(regionVisitedLayout != nullptr);
@@ -38,7 +35,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     QPushButton* saveButton = new QPushButton("Save");
     Q_ASSERT(saveButton != nullptr);
-    saveButton->setEnabled(false);
 
     QVBoxLayout* propsLayout = new QVBoxLayout();
     Q_ASSERT(propsLayout != nullptr);
@@ -78,6 +74,9 @@ MainWindow::MainWindow(QWidget *parent)
     m_name = regionNameEdit;
     m_flag = regionVisitedCheckBox;
     m_save = saveButton;
+    m_label = regionNameLabel;
+
+    resetPanels();
 
     // Center window
 
@@ -91,54 +90,47 @@ MainWindow::MainWindow(QWidget *parent)
     // Set signals
 
     QObject::connect(
-        m_view, SIGNAL(regionChecked(MapArea*)),
-        this, SLOT(regionChecked(MapArea*)));
+        m_view, SIGNAL(regionChecked(MapRegion*)),
+        this, SLOT(regionChecked(MapRegion*)));
     QObject::connect(
         m_view, SIGNAL(regionUnchecked()),
         this, SLOT(regionUnchecked()));
     QObject::connect(
         m_save, SIGNAL(clicked()),
         this, SLOT(regionSaved()));
+    QObject::connect(
+        m_view, SIGNAL(pointAdded(QPointF)),
+        this, SLOT(pointAdded(QPointF)));
+    QObject::connect(
+        m_view, SIGNAL(pointUnchecked()),
+        this, SLOT(pointUnchecked()));
 }
+
+// Protected Signals
 
 void MainWindow::closeEvent(QCloseEvent *event) {
     Q_UNUSED(event);
     m_view->store();
 }
 
-void MainWindow::regionChecked(MapArea* area) {
-    Q_ASSERT(area != nullptr);
-    if (m_currentRegion != nullptr) {
-        regionUnchecked();
-    }
-    m_currentRegion = area;
+// Protected Slots
 
+void MainWindow::regionChecked(MapRegion* region) {
+    Q_ASSERT(region != nullptr);
+
+    m_currentRegion = region;
     m_currentRegion->setChecked(true);
 
-    m_name->setEnabled(true);
-    m_name->setText(m_currentRegion->getName());
-
-    m_flag->setEnabled(true);
-    m_flag->setCheckState(m_currentRegion->isVisited() ? Qt::Checked : Qt::Unchecked);
-
-    m_save->setEnabled(true);
-
-    m_view->updateScene();
+    setPanels("Region", m_currentRegion->getName(), m_currentRegion->isVisited());
 }
 
 void MainWindow::regionUnchecked() {
-    m_name->setEnabled(false);
-    m_name->setText("");
+    if (m_currentRegion != nullptr) {
+        m_currentRegion->setChecked(false);
+        m_currentRegion = nullptr;
+    }
 
-    m_flag->setEnabled(false);
-    m_flag->setCheckState(Qt::Unchecked);
-
-    m_save->setEnabled(false);
-
-    m_currentRegion->setChecked(false);
-    m_currentRegion = nullptr;
-
-    m_view->updateScene();
+    resetPanels();
 }
 
 void MainWindow::regionSaved() {
@@ -148,4 +140,39 @@ void MainWindow::regionSaved() {
     m_currentRegion->setVisited(m_flag->isChecked());
 
     regionUnchecked();
+    m_view->updateScene();
+}
+
+void MainWindow::pointAdded(QPointF point) {
+    setPanels("Point:", "", true);
+}
+
+void MainWindow::pointUnchecked() {
+    resetPanels();
+}
+
+// Private Methods
+
+void MainWindow::setPanels(const QString& label, const QString& text, bool flag) {
+    m_name->setEnabled(true);
+    m_name->setText(text);
+
+    m_flag->setEnabled(true);
+    m_flag->setCheckState(flag ? Qt::Checked : Qt::Unchecked);
+
+    m_save->setEnabled(true);
+
+    m_label->setText(label);
+}
+
+void MainWindow::resetPanels() {
+    m_name->setEnabled(false);
+    m_name->setText("");
+
+    m_flag->setEnabled(false);
+    m_flag->setCheckState(Qt::Unchecked);
+
+    m_save->setEnabled(false);
+
+    m_label->setText("Region/Point:");
 }

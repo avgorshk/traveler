@@ -10,8 +10,12 @@
 const char* RUSSIA_BASE_FILE_NAME = "data/russia-base.svg";
 const char* RUSSIA_FILE_NAME = "data/russia.svg";
 
+const float POINT_RADIUS = 16.0f;
+
+// Public Methods
+
 MapView::MapView(QWidget *parent)
-        : QGraphicsView{parent}, m_map(nullptr) {
+        : QGraphicsView{parent}, m_map(nullptr), m_point(nullptr) {
     auto scene = new QGraphicsScene(this);
     setScene(scene);
     setTransformationAnchor(AnchorUnderMouse);
@@ -46,6 +50,9 @@ MapView::~MapView() {
     if (m_map != nullptr) {
         delete m_map;
     }
+    if (m_point != nullptr) {
+        delete m_point;
+    }
 }
 
 qreal MapView::zoomFactor() const {
@@ -56,19 +63,26 @@ void MapView::updateScene() const {
     QGraphicsScene *s = scene();
     s->clear();
 
-    const QVector<MapArea>& area_list = m_map->getAreaList();
-    for (const MapArea& area : area_list) {
+    const QVector<MapRegion>& region_list = m_map->getRegionList();
+    for (const MapRegion& region : region_list) {
         QBrush brush(QColorConstants::Svg::lightgray);
-        if (area.isVisited()) {
+        if (region.isVisited()) {
             brush.setColor(QColorConstants::Svg::lightgreen);
         }
-        if (area.isChecked()) {
+        if (region.isChecked()) {
             brush.setColor(QColorConstants::Svg::lightyellow);
         }
 
-        for (const QPolygonF& p : area.getPolygonList()) {
+        for (const QPolygonF& p : region.getPolygonList()) {
             s->addPolygon(p, QPen(), brush);
         }
+    }
+
+    if (m_point) {
+        QBrush brush(QColorConstants::Svg::orange);
+        s->addEllipse(
+            m_point->x(), m_point->y(), POINT_RADIUS, POINT_RADIUS,
+            QPen(), brush);
     }
 }
 
@@ -78,6 +92,15 @@ void MapView::store() const {
     m_map->store(m_filePath);
 }
 
+void MapView::unsetPoint() {
+    if (m_point != nullptr) {
+        delete m_point;
+    }
+    m_point = nullptr;
+}
+
+// Private Methods
+
 void MapView::zoomBy(qreal factor) {
     const qreal currentZoom = zoomFactor();
     if ((factor < 1 && currentZoom < 0.1) || (factor > 1 && currentZoom > 10)) {
@@ -85,6 +108,12 @@ void MapView::zoomBy(qreal factor) {
     }
     scale(factor, factor);
 }
+
+void MapView::setPoint(QPointF point) {
+    m_point = new QPointF(point);
+}
+
+// Protected Signals
 
 void MapView::paintEvent(QPaintEvent *event) {
     QGraphicsView::paintEvent(event);
@@ -97,13 +126,37 @@ void MapView::wheelEvent(QWheelEvent *event) {
 void MapView::mousePressEvent(QMouseEvent *event) {
     if (event->button() == Qt::RightButton) {
         QPointF point = mapToScene(event->pos());
-        MapArea* area = m_map->getArea(point);
-        if (area != nullptr) {
-            emit regionChecked(area);
+        MapRegion* region = m_map->getRegion(point);
+        if (region != nullptr) {
+            unsetPoint();
+            emit pointUnchecked();
+            emit regionUnchecked();
+
+            emit regionChecked(region);
         } else {
+            unsetPoint();
+            emit pointUnchecked();
             emit regionUnchecked();
         }
+        updateScene();
     } else {
         QGraphicsView::mousePressEvent(event);
+    }
+}
+
+void MapView::mouseDoubleClickEvent(QMouseEvent *event) {
+    if (event->button() == Qt::LeftButton) {
+        QPointF point = mapToScene(event->pos());
+        unsetPoint();
+        emit pointUnchecked();
+        emit regionUnchecked();
+
+        MapRegion* region = m_map->getRegion(point);
+        if (region != nullptr) {
+            setPoint(point);
+            emit pointAdded(point);
+        }
+
+        updateScene();
     }
 }

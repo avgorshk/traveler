@@ -1,7 +1,7 @@
 #ifndef MAPOBJECT_H
 #define MAPOBJECT_H
 
-#include "maparea.h"
+#include "mapregion.h"
 
 #include <QDomDocument>
 #include <QFile>
@@ -18,16 +18,16 @@ public:
         return QSize(m_width, m_height);
     }
 
-    const QVector<MapArea>& getAreaList() const {
-        return m_area_list;
+    const QVector<MapRegion>& getRegionList() const {
+        return m_region_list;
     }
 
-    MapArea* getArea(QPointF point) {
-        MapArea* result = nullptr;
-        for (auto& area : m_area_list) {
-            for (auto& polygon : area.getPolygonList()) {
+    MapRegion* getRegion(QPointF point) {
+        MapRegion* result = nullptr;
+        for (auto& region : m_region_list) {
+            for (auto& polygon : region.getPolygonList()) {
                 if (polygon.containsPoint(point, Qt::OddEvenFill)) {
-                    result = &area;
+                    result = &region;
                 }
             }
         }
@@ -210,57 +210,65 @@ private:
         Q_ASSERT(!height.isNull());
         m_height = height.value().toUInt();
 
+        // Paths
+
         QDomNode node = root.firstChild();
-        while (!node.isNull()) {
-            QDomElement element = node.toElement();
-            auto name = element.tagName();
-            if (name == "g") {
-                QDomNode sub_node = node.firstChild();
-                while (!sub_node.isNull()) {
-                    QDomElement sub_element = sub_node.toElement();
-                    auto sub_name = sub_element.tagName();
-                    if (sub_name == "path") {
-                        MapArea area(m_doc, sub_element);
+        Q_ASSERT(!node.isNull());
 
-                        if (sub_element.hasAttribute("fill")) {
-                            area.setVisited(true, false);
-                        }
+        QDomElement element = node.toElement();
+        auto name = element.tagName();
+        Q_ASSERT(name == "g");
 
-                        if (sub_element.hasChildNodes()) {
-                            QDomNode title_node = sub_node.firstChild();
-                            QDomElement title_element = title_node.toElement();
-                            area.setName(title_element.text(), false);
-                        }
+        QDomNode sub_node = node.firstChild();
+        while (!sub_node.isNull()) {
+            QDomElement sub_element = sub_node.toElement();
+            auto sub_name = sub_element.tagName();
+            if (sub_name == "path") {
+                MapRegion region(m_doc, sub_element);
 
-                        QPointF base(0.0f, 0.0f);
-                        auto content = sub_element.attribute("d");
-                        auto path_list = content.split('z');
-                        for (auto& path : path_list) {
-                            if (path.isEmpty()) {
-                                continue;
-                            }
-                            path.push_back('z');
-                            auto polygon = getPolygon(path, base);
-                            Q_ASSERT(!polygon.isEmpty());
+                if (sub_element.hasAttribute("fill")) {
+                    region.setVisited(true, false);
+                }
 
-                            area.addPolygon(polygon);
-                        }
+                if (sub_element.hasChildNodes()) {
+                    QDomNode title_node = sub_node.firstChild();
+                    QDomElement title_element = title_node.toElement();
+                    region.setName(title_element.text(), false);
+                }
 
-                        if (!area.getPolygonList().isEmpty()) {
-                            m_area_list.push_back(area);
-                        }
+                QPointF base(0.0f, 0.0f);
+                auto content = sub_element.attribute("d");
+                auto path_list = content.split('z');
+                for (auto& path : path_list) {
+                    if (path.isEmpty()) {
+                        continue;
                     }
-                    sub_node = sub_node.nextSibling();
+                    path.push_back('z');
+                    auto polygon = getPolygon(path, base);
+                    Q_ASSERT(!polygon.isEmpty());
+
+                    region.addPolygon(polygon);
+                }
+
+                if (!region.getPolygonList().isEmpty()) {
+                    m_region_list.push_back(region);
                 }
             }
-            node = node.nextSibling();
+            sub_node = sub_node.nextSibling();
         }
+
+        // Points
+
+        node = node.nextSibling();
+        element = node.toElement();
+        name = element.tagName();
+        Q_ASSERT(name == "g");
     }
 
 private:
     uint m_width;
     uint m_height;
-    QVector<MapArea> m_area_list;
+    QVector<MapRegion> m_region_list;
     QDomDocument m_doc;
 };
 

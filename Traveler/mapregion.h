@@ -1,25 +1,25 @@
-#ifndef MAPAREA_H
-#define MAPAREA_H
+#ifndef MAPREGION_H
+#define MAPREGION_H
 
 #include <QDomElement>
 #include <QPolygon>
 #include <QSize>
 #include <QVector>
 
-class MapArea {
+class MapRegion {
 public:
-    MapArea(QDomDocument doc, QDomElement element)
+    MapRegion(QDomDocument doc, QDomElement element)
         : m_doc(doc),
           m_element(element),
           m_visited(false),
           m_checked(false) {}
 
     void addPolygon(QPolygonF polygon) {
-        m_area.push_back(polygon);
+        m_region.push_back(polygon);
     }
 
     const QVector<QPolygonF>& getPolygonList() const {
-        return m_area;
+        return m_region;
     }
 
     const QString& getName() const {
@@ -70,13 +70,13 @@ public:
     }
 
 private:
-    QDomElement m_element;
     QDomDocument m_doc;
+    QDomElement m_element;
 
-    QVector<QPolygonF> m_area;
+    QVector<QPolygonF> m_region;
     QString m_name;
     bool m_visited;
     bool m_checked;
 };
 
-#endif // MAPAREA_H
+#endif // MAPREGION_H
