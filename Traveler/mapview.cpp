@@ -10,12 +10,10 @@
 const char* RUSSIA_BASE_FILE_NAME = "data/russia-base.svg";
 const char* RUSSIA_FILE_NAME = "data/russia.svg";
 
-const float POINT_RADIUS = 16.0f;
-
 // Public Methods
 
 MapView::MapView(QWidget *parent)
-        : QGraphicsView{parent}, m_map(nullptr), m_point(nullptr) {
+        : QGraphicsView{parent}, m_map(nullptr), m_newPoint(nullptr) {
     auto scene = new QGraphicsScene(this);
     setScene(scene);
     setTransformationAnchor(AnchorUnderMouse);
@@ -44,14 +42,16 @@ MapView::MapView(QWidget *parent)
             msgBox.exec();
         }
     }
+
+    viewport()->setCursor(Qt::ArrowCursor);
 }
 
 MapView::~MapView() {
     if (m_map != nullptr) {
         delete m_map;
     }
-    if (m_point != nullptr) {
-        delete m_point;
+    if (m_newPoint != nullptr) {
+        delete m_newPoint;
     }
 }
 
@@ -78,10 +78,25 @@ void MapView::updateScene() const {
         }
     }
 
-    if (m_point) {
+    const QVector<MapPoint>& point_list = m_map->getPointList();
+    for (const MapPoint& point : point_list) {
+        QBrush brush(QColorConstants::Svg::firebrick);
+        if (point.isChecked()) {
+            brush.setColor(QColorConstants::Svg::orange);
+        }
+        s->addEllipse(
+            point.getPoint().x() - POINT_RADIUS,
+            point.getPoint().y() - POINT_RADIUS,
+            2.0f * POINT_RADIUS, 2.0f * POINT_RADIUS,
+            QPen(), brush);
+    }
+
+    if (m_newPoint) {
         QBrush brush(QColorConstants::Svg::orange);
         s->addEllipse(
-            m_point->x(), m_point->y(), POINT_RADIUS, POINT_RADIUS,
+            m_newPoint->x() - POINT_RADIUS,
+            m_newPoint->y() - POINT_RADIUS,
+            2.0f * POINT_RADIUS, 2.0f * POINT_RADIUS,
             QPen(), brush);
     }
 }
@@ -92,11 +107,21 @@ void MapView::store() const {
     m_map->store(m_filePath);
 }
 
-void MapView::unsetPoint() {
-    if (m_point != nullptr) {
-        delete m_point;
+void MapView::unsetNewPoint() {
+    if (m_newPoint != nullptr) {
+        delete m_newPoint;
     }
-    m_point = nullptr;
+    m_newPoint = nullptr;
+}
+
+void MapView::addNewPoint(const QString& name) {
+    Q_ASSERT(m_newPoint != nullptr);
+    m_map->addPoint(*m_newPoint, name);
+}
+
+void MapView::removePoint(MapPoint* point) {
+    Q_ASSERT(point != nullptr);
+    m_map->removePoint(point);
 }
 
 // Private Methods
@@ -109,8 +134,8 @@ void MapView::zoomBy(qreal factor) {
     scale(factor, factor);
 }
 
-void MapView::setPoint(QPointF point) {
-    m_point = new QPointF(point);
+void MapView::setNewPoint(QPointF point) {
+    m_newPoint = new QPointF(point);
 }
 
 // Protected Signals
@@ -126,18 +151,21 @@ void MapView::wheelEvent(QWheelEvent *event) {
 void MapView::mousePressEvent(QMouseEvent *event) {
     if (event->button() == Qt::RightButton) {
         QPointF point = mapToScene(event->pos());
-        MapRegion* region = m_map->getRegion(point);
-        if (region != nullptr) {
-            unsetPoint();
-            emit pointUnchecked();
-            emit regionUnchecked();
 
-            emit regionChecked(region);
+        unsetNewPoint();
+        emit pointUnchecked();
+        emit regionUnchecked();
+
+        MapPoint* p = m_map->getPoint(point);
+        if (p != nullptr) {
+            emit pointChecked(p);
         } else {
-            unsetPoint();
-            emit pointUnchecked();
-            emit regionUnchecked();
+            MapRegion* region = m_map->getRegion(point);
+            if (region != nullptr) {
+                emit regionChecked(region);
+            }
         }
+
         updateScene();
     } else {
         QGraphicsView::mousePressEvent(event);
@@ -147,16 +175,21 @@ void MapView::mousePressEvent(QMouseEvent *event) {
 void MapView::mouseDoubleClickEvent(QMouseEvent *event) {
     if (event->button() == Qt::LeftButton) {
         QPointF point = mapToScene(event->pos());
-        unsetPoint();
+        unsetNewPoint();
         emit pointUnchecked();
         emit regionUnchecked();
 
         MapRegion* region = m_map->getRegion(point);
         if (region != nullptr) {
-            setPoint(point);
-            emit pointAdded(point);
+            setNewPoint(point);
+            emit pointAdded();
         }
 
         updateScene();
     }
+}
+
+void MapView::mouseReleaseEvent(QMouseEvent *event) {
+    QGraphicsView::mouseReleaseEvent(event);
+    viewport()->setCursor(Qt::ArrowCursor);
 }

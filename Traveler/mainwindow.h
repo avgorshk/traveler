@@ -17,8 +17,11 @@ public:
 protected slots:
     void regionChecked(MapRegion* region);
     void regionUnchecked();
-    void regionSaved();
-    void pointAdded(QPointF point);
+
+    void saved();
+
+    void pointAdded();
+    void pointChecked(MapPoint* point);
     void pointUnchecked();
 
 protected:
@@ -31,6 +34,7 @@ private:
 private:
     MapView* m_view;
     MapRegion* m_currentRegion;
+    MapPoint* m_currentPoint;
 
     QLineEdit* m_name;
     QCheckBox* m_flag;

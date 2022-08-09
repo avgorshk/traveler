@@ -1,6 +1,7 @@
 #ifndef MAPOBJECT_H
 #define MAPOBJECT_H
 
+#include "mappoint.h"
 #include "mapregion.h"
 
 #include <QDomDocument>
@@ -28,7 +29,25 @@ public:
             for (auto& polygon : region.getPolygonList()) {
                 if (polygon.containsPoint(point, Qt::OddEvenFill)) {
                     result = &region;
+                    break;
                 }
+            }
+        }
+        return result;
+    }
+
+    const QVector<MapPoint>& getPointList() const {
+        return m_point_list;
+    }
+
+    MapPoint* getPoint(QPointF point) {
+        MapPoint* result = nullptr;
+        for (auto& p : m_point_list) {
+            float dx = p.getPoint().x() - point.x();
+            float dy = p.getPoint().y() - point.y();
+            if (dx * dx + dy * dy <= POINT_RADIUS * POINT_RADIUS) {
+                result = &p;
+                break;
             }
         }
         return result;
@@ -44,6 +63,30 @@ public:
         QTextStream stream(&file);
         stream << m_doc.toString();
         file.close();
+    }
+
+    void addPoint(QPointF point, const QString& name) {
+        QDomElement element = m_doc.createElement("circle");
+        element.setAttribute("cx", point.x());
+        element.setAttribute("cy", point.y());
+        element.setAttribute("r", POINT_RADIUS);
+
+        QDomElement title_element = m_doc.createElement("title");
+        QDomText title_text = m_doc.createTextNode(name);
+        title_element.appendChild(title_text);
+        element.appendChild(title_element);
+        m_points_group.appendChild(element);
+
+        m_point_list.emplace_back(
+            m_doc, m_points_group, element, point, name);
+    }
+
+    void removePoint(MapPoint* point) {
+        Q_ASSERT(point != nullptr);
+
+        point->remove();
+        bool ok = m_point_list.removeOne(*point);
+        Q_ASSERT(ok);
     }
 
 private:
@@ -224,17 +267,19 @@ private:
             QDomElement sub_element = sub_node.toElement();
             auto sub_name = sub_element.tagName();
             if (sub_name == "path") {
-                MapRegion region(m_doc, sub_element);
-
+                bool visited = false;
                 if (sub_element.hasAttribute("fill")) {
-                    region.setVisited(true, false);
+                    visited = true;
                 }
 
+                QString name("");
                 if (sub_element.hasChildNodes()) {
                     QDomNode title_node = sub_node.firstChild();
                     QDomElement title_element = title_node.toElement();
-                    region.setName(title_element.text(), false);
+                    name = title_element.text();
                 }
+
+                MapRegion region(m_doc, sub_element, name, visited);
 
                 QPointF base(0.0f, 0.0f);
                 auto content = sub_element.attribute("d");
@@ -263,13 +308,46 @@ private:
         element = node.toElement();
         name = element.tagName();
         Q_ASSERT(name == "g");
+        m_points_group = element;
+
+        sub_node = node.firstChild();
+        while (!sub_node.isNull()) {
+            QDomElement sub_element = sub_node.toElement();
+            auto sub_name = sub_element.tagName();
+            if (sub_name == "circle") {
+                bool ok = false;
+
+                Q_ASSERT(sub_element.hasAttribute("cx"));
+                float x = sub_element.attribute("cx").toFloat(&ok);
+                Q_ASSERT(ok);
+
+                Q_ASSERT(sub_element.hasAttribute("cy"));
+                float y = sub_element.attribute("cy").toFloat(&ok);
+                Q_ASSERT(ok);
+
+                QString name("");
+                if (sub_element.hasChildNodes()) {
+                    QDomNode title_node = sub_node.firstChild();
+                    QDomElement title_element = title_node.toElement();
+                    name = title_element.text();
+                }
+
+                m_point_list.emplace_back(
+                    m_doc, m_points_group, sub_element, QPointF(x, y), name);
+            }
+
+            sub_node = sub_node.nextSibling();
+        }
     }
 
 private:
     uint m_width;
     uint m_height;
     QVector<MapRegion> m_region_list;
+    QVector<MapPoint> m_point_list;
+
     QDomDocument m_doc;
+    QDomElement m_points_group;
 };
 
 #endif // MAPOBJECT_H

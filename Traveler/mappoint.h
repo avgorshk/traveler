@@ -1,25 +1,29 @@
-#ifndef MAPREGION_H
-#define MAPREGION_H
+#ifndef MAPPOINT_H
+#define MAPPOINT_H
 
 #include <QDomElement>
-#include <QPolygon>
-#include <QSize>
-#include <QVector>
+#include <QPointF>
 
-class MapRegion {
+const float POINT_RADIUS = 8.0f;
+
+class MapPoint {
 public:
-    MapRegion(
-        QDomDocument doc, QDomElement element,
-        const QString& name, bool visited)
-            : m_doc(doc), m_element(element), m_name(name),
-              m_visited(visited), m_checked(false) {}
+    MapPoint(
+        QDomDocument doc, QDomElement root, QDomElement element,
+        QPointF point, const QString& name)
+            : m_doc(doc), m_root(root), m_element(element),
+              m_point(point), m_name(name), m_checked(false) {}
 
-    void addPolygon(QPolygonF polygon) {
-        m_region.push_back(polygon);
+    const QPointF& getPoint() const {
+        return m_point;
     }
 
-    const QVector<QPolygonF>& getPolygonList() const {
-        return m_region;
+    bool isChecked() const {
+        return m_checked;
+    }
+
+    void setChecked(bool checked) {
+        m_checked = checked;
     }
 
     const QString& getName() const {
@@ -45,36 +49,22 @@ public:
         }
     }
 
-    void setVisited(bool visited) {
-        m_visited = visited;
-
-        if (m_visited) {
-            m_element.setAttribute("fill", "#90ee90");
-        } else {
-            m_element.removeAttribute("fill");
-        }
+    void remove() {
+        m_root.removeChild(m_element);
     }
 
-    bool isVisited() const {
-        return m_visited;
-    }
-
-    void setChecked(bool checked) {
-        m_checked = checked;
-    }
-
-    bool isChecked() const {
-        return m_checked;
+    bool operator==(const MapPoint& right) const {
+        return m_point == right.m_point;
     }
 
 private:
     QDomDocument m_doc;
+    QDomElement m_root;
     QDomElement m_element;
 
-    QVector<QPolygonF> m_region;
+    QPointF m_point;
     QString m_name;
-    bool m_visited;
     bool m_checked;
 };
 
-#endif // MAPREGION_H
+#endif // MAPPOINT_H

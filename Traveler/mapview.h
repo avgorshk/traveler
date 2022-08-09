@@ -16,12 +16,17 @@ public:
     qreal zoomFactor() const;
     void updateScene() const;
     void store() const;
-    void unsetPoint();
+
+    void addNewPoint(const QString& name);
+    void unsetNewPoint();
+    void removePoint(MapPoint* point);
 
 signals:
     void regionChecked(MapRegion* region);
     void regionUnchecked();
-    void pointAdded(QPointF point);
+
+    void pointAdded();
+    void pointChecked(MapPoint* point);
     void pointUnchecked();
 
 protected:
@@ -29,16 +34,17 @@ protected:
     void paintEvent(QPaintEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
     void mouseDoubleClickEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
 
 private:
     void zoomBy(qreal factor);
-    void setPoint(QPointF point);
+    void setNewPoint(QPointF point);
 
 private:
     MapObject* m_map;
     QString m_filePath;
 
-    QPointF* m_point;
+    QPointF* m_newPoint;
 };
 
 #endif // MAPVIEW_H

@@ -7,31 +7,32 @@
 #include <QStyle>
 
 MainWindow::MainWindow(QWidget *parent)
-        : QMainWindow{parent}, m_view(new MapView), m_currentRegion(nullptr) {
+        : QMainWindow{parent}, m_view(new MapView),
+          m_currentRegion(nullptr), m_currentPoint(nullptr) {
     // Make layout
 
-    QLabel* regionNameLabel = new QLabel("Region/Point:");
-    Q_ASSERT(regionNameLabel != nullptr);
-    regionNameLabel->setMinimumWidth(100);
-    QLineEdit* regionNameEdit = new QLineEdit();
-    Q_ASSERT(regionNameEdit != nullptr);
+    QLabel* nameLabel = new QLabel("Region/Point:");
+    Q_ASSERT(nameLabel != nullptr);
+    nameLabel->setMinimumWidth(100);
+    QLineEdit* nameEdit = new QLineEdit();
+    Q_ASSERT(nameEdit != nullptr);
 
-    QHBoxLayout* regionNameLayout = new QHBoxLayout();
-    Q_ASSERT(regionNameLayout != nullptr);
-    regionNameLayout->addWidget(regionNameLabel);
-    regionNameLayout->addWidget(regionNameEdit);
+    QHBoxLayout* nameLayout = new QHBoxLayout();
+    Q_ASSERT(nameLayout != nullptr);
+    nameLayout->addWidget(nameLabel);
+    nameLayout->addWidget(nameEdit);
 
-    QLabel* regionVisitedLabel = new QLabel("Visited:");
-    Q_ASSERT(regionVisitedLabel != nullptr);
-    regionVisitedLabel->setMinimumWidth(100);
-    QCheckBox* regionVisitedCheckBox = new QCheckBox();
-    Q_ASSERT(regionVisitedCheckBox != nullptr);
+    QLabel* visitedLabel = new QLabel("Visited:");
+    Q_ASSERT(visitedLabel != nullptr);
+    visitedLabel->setMinimumWidth(100);
+    QCheckBox* visitedCheckBox = new QCheckBox();
+    Q_ASSERT(visitedCheckBox != nullptr);
 
-    QHBoxLayout* regionVisitedLayout = new QHBoxLayout();
-    Q_ASSERT(regionVisitedLayout != nullptr);
-    regionVisitedLayout->setAlignment(Qt::AlignLeft);
-    regionVisitedLayout->addWidget(regionVisitedLabel);
-    regionVisitedLayout->addWidget(regionVisitedCheckBox);
+    QHBoxLayout* visitedLayout = new QHBoxLayout();
+    Q_ASSERT(visitedLayout != nullptr);
+    visitedLayout->setAlignment(Qt::AlignLeft);
+    visitedLayout->addWidget(visitedLabel);
+    visitedLayout->addWidget(visitedCheckBox);
 
     QPushButton* saveButton = new QPushButton("Save");
     Q_ASSERT(saveButton != nullptr);
@@ -39,8 +40,8 @@ MainWindow::MainWindow(QWidget *parent)
     QVBoxLayout* propsLayout = new QVBoxLayout();
     Q_ASSERT(propsLayout != nullptr);
     propsLayout->setAlignment(Qt::AlignTop);
-    propsLayout->addLayout(regionNameLayout);
-    propsLayout->addLayout(regionVisitedLayout);
+    propsLayout->addLayout(nameLayout);
+    propsLayout->addLayout(visitedLayout);
     propsLayout->addWidget(saveButton);
 
     QGroupBox* propsBox = new QGroupBox("Properties");
@@ -71,10 +72,10 @@ MainWindow::MainWindow(QWidget *parent)
 
     setCentralWidget(window);
 
-    m_name = regionNameEdit;
-    m_flag = regionVisitedCheckBox;
+    m_name = nameEdit;
+    m_flag = visitedCheckBox;
     m_save = saveButton;
-    m_label = regionNameLabel;
+    m_label = nameLabel;
 
     resetPanels();
 
@@ -95,12 +96,17 @@ MainWindow::MainWindow(QWidget *parent)
     QObject::connect(
         m_view, SIGNAL(regionUnchecked()),
         this, SLOT(regionUnchecked()));
+
     QObject::connect(
         m_save, SIGNAL(clicked()),
-        this, SLOT(regionSaved()));
+        this, SLOT(saved()));
+
     QObject::connect(
-        m_view, SIGNAL(pointAdded(QPointF)),
-        this, SLOT(pointAdded(QPointF)));
+        m_view, SIGNAL(pointAdded()),
+        this, SLOT(pointAdded()));
+    QObject::connect(
+        m_view, SIGNAL(pointChecked(MapPoint*)),
+        this, SLOT(pointChecked(MapPoint*)));
     QObject::connect(
         m_view, SIGNAL(pointUnchecked()),
         this, SLOT(pointUnchecked()));
@@ -118,6 +124,7 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 void MainWindow::regionChecked(MapRegion* region) {
     Q_ASSERT(region != nullptr);
 
+    Q_ASSERT(m_currentRegion == nullptr);
     m_currentRegion = region;
     m_currentRegion->setChecked(true);
 
@@ -133,21 +140,52 @@ void MainWindow::regionUnchecked() {
     resetPanels();
 }
 
-void MainWindow::regionSaved() {
-    Q_ASSERT(m_currentRegion != nullptr);
+void MainWindow::saved() {
+    if (m_currentRegion != nullptr) {
+        m_currentRegion->setName(m_name->text());
+        m_currentRegion->setVisited(m_flag->isChecked());
+        regionUnchecked();
+    } else {
+        if (m_currentPoint != nullptr) {
+            if (m_flag->isChecked()) {
+                m_currentPoint->setName(m_name->text());
+            } else {
+                m_view->removePoint(m_currentPoint);
+            }
+        } else {
+            if (m_flag->isChecked()) {
+                m_view->addNewPoint(m_name->text());
+            }
+        }
 
-    m_currentRegion->setName(m_name->text());
-    m_currentRegion->setVisited(m_flag->isChecked());
+        m_view->unsetNewPoint();
+        pointUnchecked();
+    }
 
-    regionUnchecked();
     m_view->updateScene();
 }
 
-void MainWindow::pointAdded(QPointF point) {
+void MainWindow::pointAdded() {
+    Q_ASSERT(m_currentPoint == nullptr);
     setPanels("Point:", "", true);
 }
 
+void MainWindow::pointChecked(MapPoint* point) {
+    Q_ASSERT(point != nullptr);
+
+    Q_ASSERT(m_currentPoint == nullptr);
+    m_currentPoint = point;
+    m_currentPoint->setChecked(true);
+
+    setPanels("Point:", point->getName(), true);
+}
+
 void MainWindow::pointUnchecked() {
+    if (m_currentPoint != nullptr) {
+        m_currentPoint->setChecked(false);
+        m_currentPoint = nullptr;
+    }
+
     resetPanels();
 }
 
