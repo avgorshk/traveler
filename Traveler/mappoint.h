@@ -4,8 +4,6 @@
 #include <QDomElement>
 #include <QPointF>
 
-const float POINT_RADIUS = 8.0f;
-
 class MapPoint {
 public:
     MapPoint(

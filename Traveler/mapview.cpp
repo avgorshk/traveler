@@ -33,7 +33,7 @@ qreal MapView::zoomFactor() const {
     return transform().m11();
 }
 
-void MapView::updateScene() const {
+void MapView::updateScene() {
     QGraphicsScene *s = scene();
     s->clear();
     s->setSceneRect(QRectF(QPointF(0, 0), m_map->getSize()));
@@ -53,6 +53,7 @@ void MapView::updateScene() const {
         }
     }
 
+    float radius = m_map->getPointRadius();
     const QVector<MapPoint>& point_list = m_map->getPointList();
     for (const MapPoint& point : point_list) {
         QBrush brush(QColorConstants::Svg::firebrick);
@@ -60,20 +61,26 @@ void MapView::updateScene() const {
             brush.setColor(QColorConstants::Svg::orange);
         }
         s->addEllipse(
-            point.getPoint().x() - POINT_RADIUS,
-            point.getPoint().y() - POINT_RADIUS,
-            2.0f * POINT_RADIUS, 2.0f * POINT_RADIUS,
+            point.getPoint().x() - radius,
+            point.getPoint().y() - radius,
+            2.0f * radius, 2.0f * radius,
             QPen(), brush);
     }
 
     if (m_newPoint) {
         QBrush brush(QColorConstants::Svg::orange);
         s->addEllipse(
-            m_newPoint->x() - POINT_RADIUS,
-            m_newPoint->y() - POINT_RADIUS,
-            2.0f * POINT_RADIUS, 2.0f * POINT_RADIUS,
+            m_newPoint->x() - radius,
+            m_newPoint->y() - radius,
+            2.0f * radius, 2.0f * radius,
             QPen(), brush);
     }
+
+    uint regionsTotal = 0;
+    uint regionsVisited = 0;
+    uint poinsVisited = 0;
+    m_map->getStats(regionsTotal, regionsVisited, poinsVisited);
+    emit statsChanged(regionsTotal, regionsVisited, poinsVisited);
 }
 
 void MapView::store() const {
@@ -128,7 +135,7 @@ void MapView::selectLocation(Location location) {
             updateScene();
         } else {
             QMessageBox msgBox;
-            msgBox.setText("Unable to find Russia base map file: " + filePath);
+            msgBox.setText("Unable to find base map file: " + filePath);
             msgBox.setWindowTitle("Warning");
             msgBox.exec();
         }

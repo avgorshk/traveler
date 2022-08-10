@@ -15,11 +15,12 @@ enum Location {
 class MapView : public QGraphicsView {
     Q_OBJECT
 public:
-    explicit MapView(QWidget *parent = nullptr);
+    explicit MapView(
+            QWidget *parent = nullptr);
     ~MapView();
 
     qreal zoomFactor() const;
-    void updateScene() const;
+    void updateScene();
     void store() const;
 
     void addNewPoint(const QString& name);
@@ -35,6 +36,11 @@ signals:
     void pointAdded();
     void pointChecked(MapPoint* point);
     void pointUnchecked();
+
+    void statsChanged(
+            uint regionsTotal,
+            uint regionsVisited,
+            uint pointsVisited);
 
 protected:
     void wheelEvent(QWheelEvent *event) override;

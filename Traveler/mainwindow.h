@@ -28,6 +28,11 @@ protected slots:
     void selectRussia();
     void selectWorld();
 
+    void statsChanged(
+            uint regionsTotal,
+            uint regionsVisited,
+            uint pointsVisited);
+
 protected:
     void closeEvent(QCloseEvent *event) override;
 
@@ -44,6 +49,9 @@ private:
     QCheckBox* m_flag;
     QPushButton* m_save;
     QLabel* m_label;
+
+    QLabel* m_regionsVisited;
+    QLabel* m_pointsVisited;
 
     QAction* m_russiaAction;
     QAction* m_worldAction;

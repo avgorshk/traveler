@@ -19,6 +19,10 @@ public:
         return QSize(m_width, m_height);
     }
 
+    float getPointRadius() const {
+        return m_pointRadius;
+    }
+
     const QVector<MapRegion>& getRegionList() const {
         return m_region_list;
     }
@@ -45,7 +49,7 @@ public:
         for (auto& p : m_point_list) {
             float dx = p.getPoint().x() - point.x();
             float dy = p.getPoint().y() - point.y();
-            if (dx * dx + dy * dy <= POINT_RADIUS * POINT_RADIUS) {
+            if (dx * dx + dy * dy <= m_pointRadius * m_pointRadius) {
                 result = &p;
                 break;
             }
@@ -69,7 +73,7 @@ public:
         QDomElement element = m_doc.createElement("circle");
         element.setAttribute("cx", point.x());
         element.setAttribute("cy", point.y());
-        element.setAttribute("r", POINT_RADIUS);
+        element.setAttribute("r", m_pointRadius);
 
         QDomElement title_element = m_doc.createElement("title");
         QDomText title_text = m_doc.createTextNode(name);
@@ -87,6 +91,21 @@ public:
         point->remove();
         bool ok = m_point_list.removeOne(*point);
         Q_ASSERT(ok);
+    }
+
+    void getStats(
+            uint& regionsTotal,
+            uint& regionsVisited,
+            uint& pointsVisited) const {
+        regionsVisited = 0;
+        for (auto& region : m_region_list) {
+            if (region.isVisited()) {
+                ++regionsVisited;
+            }
+        }
+
+        regionsTotal = m_region_list.size();
+        pointsVisited = m_point_list.size();
     }
 
 private:
@@ -261,6 +280,8 @@ private:
         Q_ASSERT(!height.isNull());
         m_height = height.value().toUInt();
 
+        m_pointRadius = qMax(m_width, m_height) / 512.0f;
+
         // Paths
 
         QDomNode node = root.firstChild();
@@ -355,6 +376,8 @@ private:
 private:
     uint m_width;
     uint m_height;
+    float m_pointRadius;
+
     QVector<MapRegion> m_region_list;
     QVector<MapPoint> m_point_list;
 

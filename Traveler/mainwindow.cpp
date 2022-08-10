@@ -13,21 +13,23 @@ MainWindow::MainWindow(QWidget *parent)
     // Make menu
 
     QMenuBar* menuBar = this->menuBar();
-    QMenu* menu = new QMenu("Location");
-    QAction* russiaAction = menu->addAction("Russia", this, SLOT(selectRussia()));
+    QMenu* menu = new QMenu("&File");
+    QAction* russiaAction = menu->addAction("&Russia", this, SLOT(selectRussia()));
     russiaAction->setCheckable(true);
     russiaAction->setChecked(true);
-    QAction* worldAction = menu->addAction("World", this, SLOT(selectWorld()));
+    QAction* worldAction = menu->addAction("&World", this, SLOT(selectWorld()));
     worldAction->setCheckable(true);
     worldAction->setChecked(false);
     menu->addSeparator();
-    menu->addAction("Exit", this, SLOT(close()));
+    menu->addAction("&Exit", this, SLOT(close()));
     menuBar->addMenu(menu);
 
     m_russiaAction = russiaAction;
     m_worldAction = worldAction;
 
     // Make layout
+
+    //// Properties
 
     QLabel* nameLabel = new QLabel("Region/Point:");
     Q_ASSERT(nameLabel != nullptr);
@@ -67,8 +69,21 @@ MainWindow::MainWindow(QWidget *parent)
     propsBox->setMinimumWidth(300);
     propsBox->setLayout(propsLayout);
 
+    //// Statistics
+
+    QLabel* regionsVisited = new QLabel("Regions Visited:");
+    Q_ASSERT(regionsVisited != nullptr);
+    QLabel* pointsVisited = new QLabel("Points Visited:");
+    Q_ASSERT(pointsVisited != nullptr);
+    QVBoxLayout* statsLayout = new QVBoxLayout();
+    Q_ASSERT(statsLayout != nullptr);
+    statsLayout->setAlignment(Qt::AlignTop);
+    statsLayout->addWidget(regionsVisited);
+    statsLayout->addWidget(pointsVisited);
+
     QGroupBox* statsBox = new QGroupBox("Statistics");
     Q_ASSERT(statsBox != nullptr);
+    statsBox->setLayout(statsLayout);
 
     QVBoxLayout* panelLayout = new QVBoxLayout();
     Q_ASSERT(panelLayout != nullptr);
@@ -95,6 +110,9 @@ MainWindow::MainWindow(QWidget *parent)
     m_save = saveButton;
     m_label = nameLabel;
 
+    m_regionsVisited = regionsVisited;
+    m_pointsVisited = pointsVisited;
+
     resetPanels();
 
     // Center window
@@ -105,6 +123,9 @@ MainWindow::MainWindow(QWidget *parent)
             Qt::AlignCenter,
             QSize(1400, 800),
             screen()->availableGeometry()));
+
+    // Set title
+    setWindowTitle("Russia");
 
     // Set signals
 
@@ -128,6 +149,12 @@ MainWindow::MainWindow(QWidget *parent)
     QObject::connect(
         m_view, SIGNAL(pointUnchecked()),
         this, SLOT(pointUnchecked()));
+
+    QObject::connect(
+        m_view, SIGNAL(statsChanged(uint, uint, uint)),
+        this, SLOT(statsChanged(uint, uint, uint)));
+
+    m_view->updateScene();
 }
 
 // Protected Signals
@@ -211,12 +238,30 @@ void MainWindow::selectRussia() {
     m_worldAction->setChecked(false);
     m_russiaAction->setChecked(true);
     m_view->selectLocation(Location::Russia);
+    setWindowTitle("Russia");
 }
 
 void MainWindow::selectWorld() {
     m_worldAction->setChecked(true);
     m_russiaAction->setChecked(false);
     m_view->selectLocation(Location::World);
+    setWindowTitle("World");
+}
+
+void MainWindow::statsChanged(
+        uint regionsTotal,
+        uint regionsVisited,
+        uint pointsVisited) {
+    QString regions = "Regions Visited: ";
+    regions += QString::number(regionsVisited) + " of " +
+            QString::number(regionsTotal);
+    float percent = 100.0f * regionsVisited / regionsTotal;
+    regions += " (" + QString::number(percent, 'f', 2) + "%)";
+    m_regionsVisited->setText(regions);
+
+    QString points = "Points Visited: ";
+    points += QString::number(pointsVisited);
+    m_pointsVisited->setText(points);
 }
 
 // Private Methods
