@@ -23,3 +23,8 @@ HEADERS += \
     mappoint.h \
     mapregion.h \
     mapview.h
+
+RC_ICONS = ussr.ico
+
+DISTFILES += \
+    ussr.ico

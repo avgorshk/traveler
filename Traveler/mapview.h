@@ -28,6 +28,7 @@ public:
     void removePoint(MapPoint* point);
 
     void selectLocation(Location location);
+    void updateStats();
 
 signals:
     void regionChecked(MapRegion* region);

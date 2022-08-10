@@ -121,7 +121,7 @@ MainWindow::MainWindow(QWidget *parent)
         QStyle::alignedRect(
             Qt::LeftToRight,
             Qt::AlignCenter,
-            QSize(1400, 800),
+            QSize(1600, 1000),
             screen()->availableGeometry()));
 
     // Set title
@@ -154,7 +154,7 @@ MainWindow::MainWindow(QWidget *parent)
         m_view, SIGNAL(statsChanged(uint, uint, uint)),
         this, SLOT(statsChanged(uint, uint, uint)));
 
-    m_view->updateScene();
+    m_view->updateStats();
 }
 
 // Protected Signals

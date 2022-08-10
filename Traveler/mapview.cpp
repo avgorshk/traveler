@@ -76,11 +76,7 @@ void MapView::updateScene() {
             QPen(), brush);
     }
 
-    uint regionsTotal = 0;
-    uint regionsVisited = 0;
-    uint poinsVisited = 0;
-    m_map->getStats(regionsTotal, regionsVisited, poinsVisited);
-    emit statsChanged(regionsTotal, regionsVisited, poinsVisited);
+    updateStats();
 }
 
 void MapView::store() const {
@@ -140,6 +136,14 @@ void MapView::selectLocation(Location location) {
             msgBox.exec();
         }
     }
+}
+
+void MapView::updateStats() {
+    uint regionsTotal = 0;
+    uint regionsVisited = 0;
+    uint poinsVisited = 0;
+    m_map->getStats(regionsTotal, regionsVisited, poinsVisited);
+    emit statsChanged(regionsTotal, regionsVisited, poinsVisited);
 }
 
 // Private Methods
