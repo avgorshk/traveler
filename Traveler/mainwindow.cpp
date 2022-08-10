@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 
 #include <QGroupBox>
+#include <QMenuBar>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QScreen>
@@ -9,6 +10,23 @@
 MainWindow::MainWindow(QWidget *parent)
         : QMainWindow{parent}, m_view(new MapView),
           m_currentRegion(nullptr), m_currentPoint(nullptr) {
+    // Make menu
+
+    QMenuBar* menuBar = this->menuBar();
+    QMenu* menu = new QMenu("Location");
+    QAction* russiaAction = menu->addAction("Russia", this, SLOT(selectRussia()));
+    russiaAction->setCheckable(true);
+    russiaAction->setChecked(true);
+    QAction* worldAction = menu->addAction("World", this, SLOT(selectWorld()));
+    worldAction->setCheckable(true);
+    worldAction->setChecked(false);
+    menu->addSeparator();
+    menu->addAction("Exit", this, SLOT(close()));
+    menuBar->addMenu(menu);
+
+    m_russiaAction = russiaAction;
+    m_worldAction = worldAction;
+
     // Make layout
 
     QLabel* nameLabel = new QLabel("Region/Point:");
@@ -187,6 +205,18 @@ void MainWindow::pointUnchecked() {
     }
 
     resetPanels();
+}
+
+void MainWindow::selectRussia() {
+    m_worldAction->setChecked(false);
+    m_russiaAction->setChecked(true);
+    m_view->selectLocation(Location::Russia);
+}
+
+void MainWindow::selectWorld() {
+    m_worldAction->setChecked(true);
+    m_russiaAction->setChecked(false);
+    m_view->selectLocation(Location::World);
 }
 
 // Private Methods

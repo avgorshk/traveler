@@ -7,6 +7,11 @@
 
 #include "mapobject.h"
 
+enum Location {
+    Russia,
+    World
+};
+
 class MapView : public QGraphicsView {
     Q_OBJECT
 public:
@@ -20,6 +25,8 @@ public:
     void addNewPoint(const QString& name);
     void unsetNewPoint();
     void removePoint(MapPoint* point);
+
+    void selectLocation(Location location);
 
 signals:
     void regionChecked(MapRegion* region);
@@ -39,6 +46,7 @@ protected:
 private:
     void zoomBy(qreal factor);
     void setNewPoint(QPointF point);
+    void releaseMap();
 
 private:
     MapObject* m_map;

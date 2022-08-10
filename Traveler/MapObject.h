@@ -178,11 +178,19 @@ private:
         start_point += getPoint(path, id);
         polygon.push_back(start_point);
 
-        while (path[id].isSpace() || path[id] == '-') {
-            Q_ASSERT(id < path.size());
-            QPointF point = getPoint(path, id);
-            QPointF prev = polygon.back();
-            polygon.push_back(prev + point);
+        if (path[0] == 'm') {
+            while (path[id].isSpace() || path[id] == '-') {
+                Q_ASSERT(id < path.size());
+                QPointF point = getPoint(path, id);
+                QPointF prev = polygon.back();
+                polygon.push_back(prev + point);
+            }
+        } else { // 'M'
+            while (path[id].isSpace() || path[id] == '-') {
+                Q_ASSERT(id < path.size());
+                QPointF point = getPoint(path, id);
+                polygon.push_back(point);
+            }
         }
 
         while (id < path.size()) {
@@ -277,6 +285,10 @@ private:
                     QDomNode title_node = sub_node.firstChild();
                     QDomElement title_element = title_node.toElement();
                     name = title_element.text();
+                } else {
+                    if (sub_element.hasAttribute("name")) {
+                        name = sub_element.attribute("name");
+                    }
                 }
 
                 MapRegion region(m_doc, sub_element, name, visited);

@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QAction>
 #include <QCheckBox>
 #include <QLabel>
 #include <QLineEdit>
@@ -24,6 +25,9 @@ protected slots:
     void pointChecked(MapPoint* point);
     void pointUnchecked();
 
+    void selectRussia();
+    void selectWorld();
+
 protected:
     void closeEvent(QCloseEvent *event) override;
 
@@ -40,6 +44,9 @@ private:
     QCheckBox* m_flag;
     QPushButton* m_save;
     QLabel* m_label;
+
+    QAction* m_russiaAction;
+    QAction* m_worldAction;
 };
 
 #endif // MAINWINDOW_H

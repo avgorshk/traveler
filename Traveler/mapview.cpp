@@ -9,6 +9,8 @@
 
 const char* RUSSIA_BASE_FILE_NAME = "data/russia-base.svg";
 const char* RUSSIA_FILE_NAME = "data/russia.svg";
+const char* WORLD_BASE_FILE_NAME = "data/world-base.svg";
+const char* WORLD_FILE_NAME = "data/world.svg";
 
 // Public Methods
 
@@ -19,40 +21,12 @@ MapView::MapView(QWidget *parent)
     setTransformationAnchor(AnchorUnderMouse);
     setDragMode(ScrollHandDrag);
     setViewportUpdateMode(FullViewportUpdate);
-
-    auto execPath = QCoreApplication::applicationDirPath();
-    m_filePath = QDir::cleanPath(execPath + QDir::separator() + RUSSIA_FILE_NAME);
-    if (QFileInfo::exists(m_filePath)) {
-        m_map = new MapObject(m_filePath);
-        updateScene();
-    } else {
-        auto filePath = QDir::cleanPath(execPath + QDir::separator() + RUSSIA_BASE_FILE_NAME);
-        if (QFileInfo::exists(filePath)) {
-            QMessageBox msgBox;
-            msgBox.setText("Unable to find Russia map file: " + m_filePath + ". Base file will be used");
-            msgBox.setWindowTitle("Warning");
-            msgBox.exec();
-
-            m_map = new MapObject(filePath);
-            updateScene();
-        } else {
-            QMessageBox msgBox;
-            msgBox.setText("Unable to find Russia base map file: " + filePath);
-            msgBox.setWindowTitle("Warning");
-            msgBox.exec();
-        }
-    }
-
+    selectLocation(Location::Russia);
     viewport()->setCursor(Qt::ArrowCursor);
 }
 
 MapView::~MapView() {
-    if (m_map != nullptr) {
-        delete m_map;
-    }
-    if (m_newPoint != nullptr) {
-        delete m_newPoint;
-    }
+    releaseMap();
 }
 
 qreal MapView::zoomFactor() const {
@@ -62,6 +36,7 @@ qreal MapView::zoomFactor() const {
 void MapView::updateScene() const {
     QGraphicsScene *s = scene();
     s->clear();
+    s->setSceneRect(QRectF(QPointF(0, 0), m_map->getSize()));
 
     const QVector<MapRegion>& region_list = m_map->getRegionList();
     for (const MapRegion& region : region_list) {
@@ -102,9 +77,10 @@ void MapView::updateScene() const {
 }
 
 void MapView::store() const {
-    Q_ASSERT(m_map != nullptr);
-    Q_ASSERT(m_filePath != nullptr);
-    m_map->store(m_filePath);
+    if (m_map != nullptr) {
+        Q_ASSERT(m_filePath != nullptr);
+        m_map->store(m_filePath);
+    }
 }
 
 void MapView::unsetNewPoint() {
@@ -124,6 +100,41 @@ void MapView::removePoint(MapPoint* point) {
     m_map->removePoint(point);
 }
 
+void MapView::selectLocation(Location location) {
+    const char* filename =
+        location == Location::Russia ?
+                    RUSSIA_FILE_NAME : WORLD_FILE_NAME;
+    const char* baseFilename =
+        location == Location::Russia ?
+                    RUSSIA_BASE_FILE_NAME : WORLD_BASE_FILE_NAME;
+
+    auto execPath = QCoreApplication::applicationDirPath();
+    auto filePath = QDir::cleanPath(execPath + QDir::separator() + filename);
+    if (m_filePath == filePath) {
+        return;
+    } else {
+        store();
+        releaseMap();
+        m_filePath = filePath;
+    }
+
+    if (QFileInfo::exists(m_filePath)) {
+        m_map = new MapObject(m_filePath);
+        updateScene();
+    } else {
+        filePath = QDir::cleanPath(execPath + QDir::separator() + baseFilename);
+        if (QFileInfo::exists(filePath)) {
+            m_map = new MapObject(filePath);
+            updateScene();
+        } else {
+            QMessageBox msgBox;
+            msgBox.setText("Unable to find Russia base map file: " + filePath);
+            msgBox.setWindowTitle("Warning");
+            msgBox.exec();
+        }
+    }
+}
+
 // Private Methods
 
 void MapView::zoomBy(qreal factor) {
@@ -136,6 +147,17 @@ void MapView::zoomBy(qreal factor) {
 
 void MapView::setNewPoint(QPointF point) {
     m_newPoint = new QPointF(point);
+}
+
+void MapView::releaseMap() {
+    if (m_map != nullptr) {
+        delete m_map;
+        m_map = nullptr;
+    }
+    if (m_newPoint != nullptr) {
+        delete m_newPoint;
+        m_newPoint = nullptr;
+    }
 }
 
 // Protected Signals
