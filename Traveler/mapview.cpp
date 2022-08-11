@@ -6,6 +6,7 @@
 #include <QDir>
 #include <QMessageBox>
 #include <QMouseEvent>
+#include <QToolTip>
 
 const char* RUSSIA_BASE_FILE_NAME = "data/russia-base.svg";
 const char* RUSSIA_FILE_NAME = "data/russia.svg";
@@ -37,6 +38,7 @@ void MapView::updateScene() {
     QGraphicsScene *s = scene();
     s->clear();
     s->setSceneRect(QRectF(QPointF(0, 0), m_map->getSize()));
+    QPen pen(QBrush(QColorConstants::Black), 0.25f);
 
     const QVector<MapRegion>& region_list = m_map->getRegionList();
     for (const MapRegion& region : region_list) {
@@ -49,7 +51,7 @@ void MapView::updateScene() {
         }
 
         for (const QPolygonF& p : region.getPolygonList()) {
-            s->addPolygon(p, QPen(), brush);
+            s->addPolygon(p, pen, brush);
         }
     }
 
@@ -64,7 +66,7 @@ void MapView::updateScene() {
             point.getPoint().x() - radius,
             point.getPoint().y() - radius,
             2.0f * radius, 2.0f * radius,
-            QPen(), brush);
+            pen, brush);
     }
 
     if (m_newPoint) {
@@ -73,7 +75,7 @@ void MapView::updateScene() {
             m_newPoint->x() - radius,
             m_newPoint->y() - radius,
             2.0f * radius, 2.0f * radius,
-            QPen(), brush);
+            pen, brush);
     }
 
     updateStats();
@@ -225,4 +227,24 @@ void MapView::mouseDoubleClickEvent(QMouseEvent *event) {
 void MapView::mouseReleaseEvent(QMouseEvent *event) {
     QGraphicsView::mouseReleaseEvent(event);
     viewport()->setCursor(Qt::ArrowCursor);
+}
+
+void MapView::mouseMoveEvent(QMouseEvent *event) {
+    QGraphicsView::mouseMoveEvent(event);
+
+    QPointF p = mapToScene(event->pos());
+    auto region = m_map->getRegion(p);
+    if (region != nullptr) {
+        QString text;
+        auto point = m_map->getPoint(p);
+        if (point != nullptr) {
+            text = point->getName();
+        } else {
+            text = region->getName();
+        }
+
+        if (!text.isEmpty()) {
+            QToolTip::showText(event->globalPosition().toPoint(), text);
+        }
+    }
 }

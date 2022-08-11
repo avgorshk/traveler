@@ -2,9 +2,15 @@
 
 #include "mainwindow.h"
 
+#define NAME "Traveler"
+#define VERSION "1.0"
+
 int main(int argc, char *argv[]) {
     QApplication a(argc, argv);
-    QCoreApplication::setApplicationName("Traveler");
+
+    QString appName(NAME);
+    appName = appName + " [" + VERSION + "]";
+    QCoreApplication::setApplicationName(appName);
     QGuiApplication::setApplicationDisplayName(QCoreApplication::applicationName());
 
     MainWindow window;

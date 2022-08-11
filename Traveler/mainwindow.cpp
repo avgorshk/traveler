@@ -175,6 +175,7 @@ void MainWindow::regionChecked(MapRegion* region) {
     m_currentRegion->setChecked(true);
 
     setPanels("Region", m_currentRegion->getName(), m_currentRegion->isVisited());
+    m_photo->disable();
 }
 
 void MainWindow::regionUnchecked() {
@@ -195,6 +196,9 @@ void MainWindow::saved() {
         if (m_currentPoint != nullptr) {
             if (m_flag->isChecked()) {
                 m_currentPoint->setName(m_name->text());
+                m_currentPoint->setPhoto(
+                            m_photo->filename(),
+                            getMapPrefix());
             } else {
                 m_view->removePoint(m_currentPoint);
             }
@@ -214,6 +218,7 @@ void MainWindow::saved() {
 void MainWindow::pointAdded() {
     Q_ASSERT(m_currentPoint == nullptr);
     setPanels("Point:", "", true);
+    m_photo->enable();
 }
 
 void MainWindow::pointChecked(MapPoint* point) {
@@ -224,6 +229,8 @@ void MainWindow::pointChecked(MapPoint* point) {
     m_currentPoint->setChecked(true);
 
     setPanels("Point:", point->getName(), true);
+    m_photo->enable();
+    m_photo->load(m_currentPoint->getPhotoFilePath(getMapPrefix()));
 }
 
 void MainWindow::pointUnchecked() {
@@ -289,4 +296,10 @@ void MainWindow::resetPanels() {
     m_save->setEnabled(false);
 
     m_label->setText("Region/Point:");
+
+    m_photo->disable();
+}
+
+QString MainWindow::getMapPrefix() const {
+    return m_russiaAction->isChecked() ? "russia" : "world";
 }

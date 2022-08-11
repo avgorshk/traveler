@@ -40,6 +40,7 @@ protected:
 private:
     void setPanels(const QString& label, const QString& text, bool flag);
     void resetPanels();
+    QString getMapPrefix() const;
 
 private:
     MapView* m_view;

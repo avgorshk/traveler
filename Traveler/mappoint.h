@@ -1,8 +1,13 @@
 #ifndef MAPPOINT_H
 #define MAPPOINT_H
 
+#include <QApplication>
+#include <QDir>
 #include <QDomElement>
+#include <QFile>
 #include <QPointF>
+
+#define PHOTO_PATH "photo"
 
 class MapPoint {
 public:
@@ -44,6 +49,36 @@ public:
             QDomText title_text = m_doc.createTextNode(m_name);
             title_element.appendChild(title_text);
             m_element.appendChild(title_element);
+        }
+    }
+
+    QString getPhotoFilename() const {
+        return
+                QString::number(m_point.x(), 'f', 4) +
+                "_" +
+                QString::number(m_point.y(), 'f', 4) +
+                ".jpg";
+    }
+
+    QString getPhotoFilePath(const QString& prefix) const {
+        auto execPath = QCoreApplication::applicationDirPath();
+        return QDir::cleanPath(
+                    execPath + QDir::separator() +
+                    PHOTO_PATH + QDir::separator() +
+                    prefix + "_" + getPhotoFilename());
+    }
+
+    void setPhoto(const QString& filename, const QString& prefix) {
+        auto target = getPhotoFilePath(prefix);
+        if (filename.isEmpty()) { // Remove photo
+            if (QFile::exists(target)) {
+                bool ok = QFile::remove(target);
+                Q_ASSERT(ok);
+            }
+        } else { // Save photo
+            Q_ASSERT(filename != target);
+            bool ok = QFile::copy(filename, target);
+            Q_ASSERT(ok);
         }
     }
 
