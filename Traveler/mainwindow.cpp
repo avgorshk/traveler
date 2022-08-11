@@ -8,7 +8,7 @@
 #include <QStyle>
 
 MainWindow::MainWindow(QWidget *parent)
-        : QMainWindow{parent}, m_view(new MapView),
+        : QMainWindow{parent}, m_view(new MapView), m_photo(new PhotoView),
           m_currentRegion(nullptr), m_currentPoint(nullptr) {
     // Make menu
 
@@ -63,10 +63,11 @@ MainWindow::MainWindow(QWidget *parent)
     propsLayout->addLayout(nameLayout);
     propsLayout->addLayout(visitedLayout);
     propsLayout->addWidget(saveButton);
+    propsLayout->addWidget(m_photo);
 
     QGroupBox* propsBox = new QGroupBox("Properties");
     Q_ASSERT(propsBox != nullptr);
-    propsBox->setMinimumWidth(300);
+    propsBox->setMinimumWidth(512);
     propsBox->setLayout(propsLayout);
 
     //// Statistics
@@ -121,7 +122,7 @@ MainWindow::MainWindow(QWidget *parent)
         QStyle::alignedRect(
             Qt::LeftToRight,
             Qt::AlignCenter,
-            QSize(1600, 1000),
+            QSize(1800, 1000),
             screen()->availableGeometry()));
 
     // Set title
@@ -151,8 +152,8 @@ MainWindow::MainWindow(QWidget *parent)
         this, SLOT(pointUnchecked()));
 
     QObject::connect(
-        m_view, SIGNAL(statsChanged(uint, uint, uint)),
-        this, SLOT(statsChanged(uint, uint, uint)));
+        m_view, SIGNAL(statsChanged(uint,uint,uint)),
+        this, SLOT(statsChanged(uint,uint,uint)));
 
     m_view->updateStats();
 }

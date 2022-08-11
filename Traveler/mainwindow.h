@@ -9,6 +9,7 @@
 #include <QPushButton>
 
 #include "mapview.h"
+#include "photoview.h"
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -42,6 +43,7 @@ private:
 
 private:
     MapView* m_view;
+    PhotoView* m_photo;
     MapRegion* m_currentRegion;
     MapPoint* m_currentPoint;
 

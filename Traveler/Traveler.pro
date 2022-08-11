@@ -10,7 +10,8 @@ CONFIG -= app_bundle
 SOURCES += \
         main.cpp \
         mainwindow.cpp \
-        mapview.cpp
+        mapview.cpp \
+        photoview.cpp
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
@@ -22,7 +23,8 @@ HEADERS += \
     mapobject.h \
     mappoint.h \
     mapregion.h \
-    mapview.h
+    mapview.h \
+    photoview.h
 
 RC_ICONS = ussr.ico
 
