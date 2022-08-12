@@ -77,6 +77,10 @@ public:
             }
         } else { // Save photo
             if (filename != target) {
+                if (QFile::exists(target)) {
+                    bool ok = QFile::remove(target);
+                    Q_ASSERT(ok);
+                }
                 bool ok = QFile::copy(filename, target);
                 Q_ASSERT(ok);
             }

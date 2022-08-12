@@ -250,6 +250,9 @@ void MainWindow::selectRussia() {
     m_russiaAction->setChecked(true);
     m_view->selectLocation(Location::Russia);
     setWindowTitle("Russia");
+    resetPanels();
+    m_currentPoint = nullptr;
+    m_currentRegion = nullptr;
 }
 
 void MainWindow::selectWorld() {
@@ -257,6 +260,9 @@ void MainWindow::selectWorld() {
     m_russiaAction->setChecked(false);
     m_view->selectLocation(Location::World);
     setWindowTitle("World");
+    resetPanels();
+    m_currentPoint = nullptr;
+    m_currentRegion = nullptr;
 }
 
 void MainWindow::statsChanged(
