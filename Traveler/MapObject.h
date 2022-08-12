@@ -280,7 +280,7 @@ private:
         Q_ASSERT(!height.isNull());
         m_height = height.value().toUInt();
 
-        m_pointRadius = qMax(m_width, m_height) / 512.0f;
+        m_pointRadius = qMax(m_width, m_height) / 1024.0f;
 
         // Paths
 
