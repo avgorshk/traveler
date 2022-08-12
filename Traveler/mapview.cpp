@@ -95,9 +95,9 @@ void MapView::unsetNewPoint() {
     m_newPoint = nullptr;
 }
 
-void MapView::addNewPoint(const QString& name) {
+MapPoint* MapView::addNewPoint(const QString& name) {
     Q_ASSERT(m_newPoint != nullptr);
-    m_map->addPoint(*m_newPoint, name);
+    return m_map->addPoint(*m_newPoint, name);
 }
 
 void MapView::removePoint(MapPoint* point) {

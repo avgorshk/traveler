@@ -69,7 +69,7 @@ public:
         file.close();
     }
 
-    void addPoint(QPointF point, const QString& name) {
+    MapPoint* addPoint(QPointF point, const QString& name) {
         QDomElement element = m_doc.createElement("circle");
         element.setAttribute("cx", point.x());
         element.setAttribute("cy", point.y());
@@ -83,6 +83,7 @@ public:
 
         m_point_list.emplace_back(
             m_doc, m_points_group, element, point, name);
+        return &m_point_list.back();
     }
 
     void removePoint(MapPoint* point) {

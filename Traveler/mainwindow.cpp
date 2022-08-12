@@ -62,8 +62,8 @@ MainWindow::MainWindow(QWidget *parent)
     propsLayout->setAlignment(Qt::AlignTop);
     propsLayout->addLayout(nameLayout);
     propsLayout->addLayout(visitedLayout);
-    propsLayout->addWidget(saveButton);
     propsLayout->addWidget(m_photo);
+    propsLayout->addWidget(saveButton);
 
     QGroupBox* propsBox = new QGroupBox("Properties");
     Q_ASSERT(propsBox != nullptr);
@@ -204,7 +204,10 @@ void MainWindow::saved() {
             }
         } else {
             if (m_flag->isChecked()) {
-                m_view->addNewPoint(m_name->text());
+                MapPoint* point = m_view->addNewPoint(m_name->text());
+                point->setPhoto(
+                            m_photo->filename(),
+                            getMapPrefix());
             }
         }
 

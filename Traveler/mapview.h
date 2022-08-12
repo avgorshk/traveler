@@ -23,7 +23,7 @@ public:
     void updateScene();
     void store() const;
 
-    void addNewPoint(const QString& name);
+    MapPoint* addNewPoint(const QString& name);
     void unsetNewPoint();
     void removePoint(MapPoint* point);
 

@@ -76,9 +76,10 @@ public:
                 Q_ASSERT(ok);
             }
         } else { // Save photo
-            Q_ASSERT(filename != target);
-            bool ok = QFile::copy(filename, target);
-            Q_ASSERT(ok);
+            if (filename != target) {
+                bool ok = QFile::copy(filename, target);
+                Q_ASSERT(ok);
+            }
         }
     }
 
