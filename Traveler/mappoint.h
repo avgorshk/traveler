@@ -54,9 +54,9 @@ public:
 
     QString getPhotoFilename() const {
         return
-                QString::number(m_point.x(), 'f', 4) +
+                QString::number(qRound(m_point.x())) +
                 "_" +
-                QString::number(m_point.y(), 'f', 4) +
+                QString::number(qRound(m_point.y())) +
                 ".jpg";
     }
 
