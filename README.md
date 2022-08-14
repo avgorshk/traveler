@@ -1,2 +1,4 @@
-# traveler
-GUI Application To Account Traveled Places
+# Traveler
+GUI Application To Account Traveled Places:
+
+![Traveler](screen.jpg)
