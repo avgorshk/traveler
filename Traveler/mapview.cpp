@@ -232,19 +232,19 @@ void MapView::mouseReleaseEvent(QMouseEvent *event) {
 void MapView::mouseMoveEvent(QMouseEvent *event) {
     QGraphicsView::mouseMoveEvent(event);
 
+    QString text;
     QPointF p = mapToScene(event->pos());
-    auto region = m_map->getRegion(p);
-    if (region != nullptr) {
-        QString text;
-        auto point = m_map->getPoint(p);
-        if (point != nullptr) {
-            text = point->getName();
-        } else {
+    auto point = m_map->getPoint(p);
+    if (point != nullptr) {
+        text = point->getName();
+    } else {
+        auto region = m_map->getRegion(p);
+        if (region != nullptr) {
             text = region->getName();
         }
+    }
 
-        if (!text.isEmpty()) {
-            QToolTip::showText(event->globalPosition().toPoint(), text);
-        }
+    if (!text.isEmpty()) {
+        QToolTip::showText(event->globalPosition().toPoint(), text);
     }
 }
