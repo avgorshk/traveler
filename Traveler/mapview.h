@@ -21,7 +21,9 @@ public:
 
     qreal zoomFactor() const;
     void updateScene();
-    void store() const;
+
+    void markChanged();
+    void store();
 
     MapPoint* addNewPoint(const QString& name);
     void unsetNewPoint();
@@ -61,6 +63,7 @@ private:
     QString m_filePath;
 
     QPointF* m_newPoint;
+    bool m_changed;
 };
 
 #endif // MAPVIEW_H

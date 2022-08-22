@@ -192,6 +192,7 @@ void MainWindow::saved() {
         m_currentRegion->setName(m_name->text());
         m_currentRegion->setVisited(m_flag->isChecked());
         regionUnchecked();
+        m_view->markChanged();
     } else {
         if (m_currentPoint != nullptr) {
             if (m_flag->isChecked()) {
@@ -202,12 +203,14 @@ void MainWindow::saved() {
             } else {
                 m_view->removePoint(m_currentPoint);
             }
+            m_view->markChanged();
         } else {
             if (m_flag->isChecked()) {
                 MapPoint* point = m_view->addNewPoint(m_name->text());
                 point->setPhoto(
                             m_photo->filename(),
                             getMapPrefix());
+                m_view->markChanged();
             }
         }
 

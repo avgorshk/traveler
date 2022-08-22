@@ -16,7 +16,8 @@ const char* WORLD_FILE_NAME = "data/world.svg";
 // Public Methods
 
 MapView::MapView(QWidget *parent)
-        : QGraphicsView{parent}, m_map(nullptr), m_newPoint(nullptr) {
+        : QGraphicsView{parent}, m_map(nullptr),
+          m_newPoint(nullptr), m_changed(false) {
     auto scene = new QGraphicsScene(this);
     setScene(scene);
     setTransformationAnchor(AnchorUnderMouse);
@@ -81,10 +82,15 @@ void MapView::updateScene() {
     updateStats();
 }
 
-void MapView::store() const {
-    if (m_map != nullptr) {
+void MapView::markChanged() {
+    m_changed = true;
+}
+
+void MapView::store() {
+    if (m_map != nullptr && m_changed) {
         Q_ASSERT(m_filePath != nullptr);
         m_map->store(m_filePath);
+        m_changed = false;
     }
 }
 
